@@ -21,6 +21,7 @@ Repo: github.com/Panniantong/Agent-Reach | License: MIT | Version: 1.5.0
 - `agent_reach/channels/` — One file per platform (twitter.py, reddit.py, youtube.py, etc.)
 - `agent_reach/channels/base.py` — Base channel class (all channels inherit from this)
 - `agent_reach/integrations/mcp_server.py` — MCP server integration
+- `agent_reach/social_scraper/` — Social scraper subsystem (FB/IG/TikTok backup; CLI `agent-reach-social`, own MCP server, tests in `tests/social_scraper/`)
 - `agent_reach/skill/` — OpenClaw skill files
 - `agent_reach/guides/` — Usage guides
 - `tests/` — pytest tests

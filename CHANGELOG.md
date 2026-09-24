@@ -8,6 +8,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ✨ Features / 新增
+
+#### 📱 Social Scraper — Facebook / Instagram / TikTok backup (`agent-reach-social`)
+
+- New subsystem `agent_reach/social_scraper/`: input một page/profile/user URL →
+  cào **toàn bộ payload nền tảng trả về** (posts, videos, lives, events, insights…)
+  bằng Playwright + phiên đăng nhập của chính người dùng — không cần API key.
+- Backup có cấu trúc: `platform/handle/<stamp>/` với `manifest.json` (sha256,
+  provenance), `index.jsonl` (query/lookup/search), `raw/*.json` (**payload giữ
+  nguyên văn**), `media/` (stream tải trực tiếp từ CDN, skip-if-exists, atomic).
+- Đăng nhập 2 đường: `agent-reach-social login <platform>` (trình duyệt hiện,
+  người dùng tự đăng nhập → storage_state chmod 600) hoặc import file Cookie
+  (Cookie-Editor JSON / storage_state / Netscape qua `SOCIAL_*_COOKIES`).
+- CLI `agent-reach-social`: `login / scrape / list / show / search / download /
+  status / serve-mcp` (có `--json` cho agent).
+- MCP server `social://…`: 8 tools (`social_scrape`, `social_list_targets`,
+  `social_list_resources`, `social_get_resource`, `social_read_raw`,
+  `social_search`, `social_download_media`, `social_status`) + native resources;
+  tương thích **cả MCP SDK 1.x (decorator) lẫn 2.x (constructor callback)**,
+  error message được scrub credential.
+- Docs: `docs/social_scraper.md`; env mẫu trong `.env.example`; extra
+  `pip install 'agent-reach[social]'`.
+
 ### 🐛 Bug Fixes / 修复
 
 #### 🔐 Boss直聘 — 登录态误判（双凭据存储）
