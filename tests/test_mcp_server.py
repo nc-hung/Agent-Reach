@@ -1,7 +1,10 @@
 """Security boundaries for the optional Agent Reach MCP server."""
 
 import asyncio
+import json
 from types import SimpleNamespace
+
+import pytest
 
 import agent_reach.integrations.mcp_server as mcp_server
 
@@ -69,6 +72,58 @@ def test_mcp_status_uses_read_only_config(monkeypatch):
     assert len(created_configs) == 1
     assert created_configs[0].read_only is True
     assert result[0].text == "ok"
+
+
+class _FakeV2Server:
+    """mcp 2.x style: handlers arrive as constructor callbacks."""
+
+    def __init__(self, name, **kwargs):
+        self.name = name
+        self.kwargs = kwargs
+
+
+def test_mcp_v2_constructor_callbacks(monkeypatch):
+    """With mcp >= 2.x the server registers on_list_tools/on_call_tool."""
+    mcp_types = pytest.importorskip("mcp.types")  # real pydantic models needed
+    monkeypatch.setattr(mcp_server, "HAS_MCP", True)
+    monkeypatch.setattr(mcp_server, "Server", _FakeV2Server, raising=False)
+    monkeypatch.setattr(mcp_server, "_is_mcp_v2", lambda: True)
+
+    class _Config:
+        def __init__(self, *, read_only=False):
+            self.read_only = read_only
+
+    class _AgentReach:
+        def __init__(self, config):
+            self.config = config
+
+        def doctor_report(self):
+            return {"web": "ok"}
+
+    monkeypatch.setattr(mcp_server, "Config", _Config)
+    monkeypatch.setattr(mcp_server, "AgentReach", _AgentReach)
+
+    server = mcp_server.create_server()
+    assert set(server.kwargs) == {"description", "on_list_tools", "on_call_tool"}
+
+    tools = asyncio.run(server.kwargs["on_list_tools"](None, None))
+    assert [t.name for t in tools.tools] == ["get_status"]
+
+    result = asyncio.run(
+        server.kwargs["on_call_tool"](
+            None, SimpleNamespace(name="get_status", arguments=None)
+        )
+    )
+    assert isinstance(result, mcp_types.CallToolResult)
+    assert result.is_error is False
+    assert json.loads(result.content[0].text) == {"web": "ok"}
+
+    unknown = asyncio.run(
+        server.kwargs["on_call_tool"](
+            None, SimpleNamespace(name="nope", arguments={})
+        )
+    )
+    assert "Unknown tool: nope" in unknown.content[0].text
 
 
 def test_mcp_status_exception_credentials_are_scrubbed(monkeypatch):

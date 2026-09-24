@@ -8,6 +8,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### 🐛 Bug Fixes / 修复
+
+#### 🔌 MCP server — break with MCP SDK 2.x
+
+- `agent_reach/integrations/mcp_server.py` dùng decorator API của mcp 1.x
+  (`@server.list_tools()`) — với mcp 2.x (API mới: constructor callback
+  `on_list_tools=`/`on_call_tool=`, decorator đã bị gỡ) server **crash ngay**
+  `AttributeError: 'Server' object has no attribute 'list_tools'`.
+  (Tests chỉ pass nhờ fake monkeypatch nên lỗi không bị bắt.)
+- Fix: dual-API như social scraper — detect `on_call_tool` trong signature
+  của `Server.__init__` để tự chọn callback path (mcp ≥2.x) hoặc decorator
+  path (mcp 1.x); tool spec đặt trong dict camelCase (`Tool(**spec)`) để
+  mypy và cả hai đời SDK đều chấp nhận; thêm test wiring v2.
+- Verified: stdio handshake thật với mcp 2.2.0 (initialize → tools/list →
+  tools/call `get_status`); `mypy agent_reach` whole-repo sạch.
+
 ### ✨ Features / 新增
 
 #### 📱 Social Scraper — Facebook / Instagram / TikTok backup (`agent-reach-social`)
