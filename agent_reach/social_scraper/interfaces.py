@@ -230,7 +230,11 @@ class ResourceQuery(ABC):
 
     @abstractmethod
     def read_raw(self, resource: Resource, max_bytes: int = 0) -> Any:
-        """Return the raw payload a resource was parsed from."""
+        """Return the raw payload a resource was parsed from (best effort).
+
+        A missing or oversize payload yields an ``{"error": ...}`` dict
+        instead of raising, so callers can render it inline.
+        """
 
     @abstractmethod
     def search(

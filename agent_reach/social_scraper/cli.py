@@ -242,7 +242,7 @@ def cmd_show(args: argparse.Namespace, settings: ScraperSettings) -> int:
         raise SocialScraperError(f"Resource not found: {args.id}")
     payload = to_jsonable(resource)
     if args.raw:
-        payload["raw"] = repo.read_raw(resource, max_bytes=256 * 1024)
+        payload["raw"] = repo.read_raw(resource)
     if args.json:
         _print_json(payload)
         return _EXIT_OK

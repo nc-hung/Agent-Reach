@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from agent_reach.utils.paths import read_small_text_no_follow
+from agent_reach.utils.paths import PrivatePathError, read_small_text_no_follow
 
 from ..exceptions import StorageError
 from ..interfaces import ResourceQuery
@@ -195,7 +195,14 @@ class ResourceRepository(ResourceQuery):
         if session_dir.resolve() not in path.parents:
             raise StorageError("Raw file escapes the session directory")
         limit = max_bytes or _MAX_RAW_BYTES
-        text = read_small_text_no_follow(path, max_bytes=limit)
+        try:
+            text = read_small_text_no_follow(path, max_bytes=limit)
+        except PrivatePathError:
+            # oversize (or a refused path) must degrade, never raise — the
+            # CLI and the MCP server both rely on the best-effort contract.
+            return {"error": f"raw file exceeds the {limit}-byte read limit",
+                    "file": resource.raw_ref.file,
+                    "limit_bytes": limit}
         if text is None:
             return {"error": f"raw file missing or larger than {limit} bytes",
                     "file": resource.raw_ref.file}

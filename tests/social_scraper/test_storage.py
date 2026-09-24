@@ -133,6 +133,20 @@ def test_repository_read_raw_with_pointer(store, settings):
     assert isinstance(whole, dict) and "items" in whole
 
 
+def test_repository_read_raw_oversize_returns_error(store, settings):
+    _session_dir, resources, _profile = seed_session(store)
+    repo = ResourceRepository(settings.backup_dir)
+    # an oversize payload degrades to an error dict — it must not raise
+    result = repo.read_raw(resources[0], max_bytes=4)
+    assert isinstance(result, dict)
+    assert "exceed" in result["error"]
+    assert result["file"] == resources[0].raw_ref.file
+    assert result["limit_bytes"] == 4
+    # within the limit the payload still parses normally
+    ok = repo.read_raw(resources[0], max_bytes=1024 * 1024)
+    assert ok == [{"id": "0"}, {"id": "1"}, {"id": "2"}]
+
+
 def test_repository_rejects_traversal(store, settings):
     seed_session(store)
     repo = ResourceRepository(settings.backup_dir)

@@ -10,6 +10,18 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes / 修复
 
+#### 📱 Social Scraper — `show --raw` crash với payload > 256 KiB
+
+- `agent-reach-social show <id> --raw` raise `PrivatePathError` khi raw payload
+  vượt cap 256 KiB của CLI — payload GraphQL thật dễ vượt (observed 414 KiB).
+  `repository.read_raw` chỉ bắt case "file missing", nhánh oversize thoát ra
+  ngoài → CLI báo `unexpected error`; `social_read_raw` (MCP) cũng có thể fail
+  tương tự khi payload vượt `_MAX_RAW_READ`.
+- Fix: `read_raw` catch oversize → trả về error dict best-effort (không raise,
+  contract ghi trong `interfaces.ResourceQuery.read_raw`); CLI bỏ cap 256 KiB
+  (dùng default 8 MiB khớp write-side capture cap); MCP `_MAX_RAW_READ`
+  512 KiB → 1 MiB. Thêm 2 regression test (repository + CLI).
+
 #### 🔌 MCP server — break with MCP SDK 2.x
 
 - `agent_reach/integrations/mcp_server.py` dùng decorator API của mcp 1.x

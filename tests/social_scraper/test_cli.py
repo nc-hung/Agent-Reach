@@ -55,6 +55,19 @@ def test_show_with_raw(settings, seeded_backup, capsys):
     assert payload["raw"] == [{"id": "0"}, {"id": "1"}, {"id": "2"}]
 
 
+def test_show_raw_accepts_large_payload(settings, seeded_backup, capsys):
+    # real GraphQL payloads exceed 256 KiB — show --raw must not crash on them
+    session_dir, resources = seeded_backup
+    raw_path = session_dir / resources[0].raw_ref.file
+    raw_path.write_text(
+        json.dumps({"items": [{"id": "0", "pad": "x" * (300 * 1024)}]})
+    )
+    assert cli.main(["show", resources[0].id, "--json", "--raw"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    # raw_ref pointer "items" → the payload resolves to that list
+    assert payload["raw"][0]["id"] == "0"
+
+
 def test_show_missing_id(settings, capsys):
     assert cli.main(["show", "nope", "--json"]) == 1
     assert "not found" in capsys.readouterr().out.lower()

@@ -61,7 +61,7 @@ except ImportError:  # pragma: no cover - exercised via tests' fake module
 #: max resources returned by social_list_resources / list_resources()
 _MAX_LIST = 100
 #: max raw payload bytes returned by social_read_raw
-_MAX_RAW_READ = 512 * 1024
+_MAX_RAW_READ = 1024 * 1024
 _SERVER_NAME = "agent-reach-social"
 _SERVER_VERSION = "1.0.0"
 
